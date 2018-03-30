@@ -226,15 +226,6 @@ public class SPUtils {
     }
 
     private SharedPreferences getSource(String fileName) {
-        SharedPreferences source = mSPSources.get(fileName);
-        if (source == null) {
-            source = createSource(fileName);
-            mSPSources.put(fileName, source);
-        }
-        return source;
-    }
-
-    private SharedPreferences createSource(String fileName) {
         return Utils.getApp().getSharedPreferences(fileName, Context.MODE_PRIVATE);
     }
 
