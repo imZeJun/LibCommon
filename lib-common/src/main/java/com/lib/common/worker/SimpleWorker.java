@@ -11,7 +11,7 @@ public class SimpleWorker {
     private Handler mWorkerHandler;
     private Handler mMainHandler;
 
-    private SimpleWorker() {
+    public SimpleWorker() {
         synchronized (SimpleWorker.class) {
             if (sLooper == null) {
                 HandlerThread thread = new HandlerThread("SimpleWorker");

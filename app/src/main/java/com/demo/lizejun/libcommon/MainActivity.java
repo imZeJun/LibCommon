@@ -16,12 +16,5 @@ public class MainActivity extends AppCompatActivity {
                 new SpWorker.SpEditor.Builder()
                         .putBoolean("aaa", false)
                         .clear().build());
-        SimpleWorker.getInstance().startAsyncWork(new Runnable() {
-
-            @Override
-            public void run() {
-
-            }
-        });
     }
 }
