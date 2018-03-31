@@ -1,8 +1,8 @@
-package com.lib.common.util;
+package com.lib.common.source;
 
 import android.content.Context;
 
-public class Utils {
+public class UtilSource {
 
     private static Context sApp;
 
@@ -12,7 +12,7 @@ public class Utils {
 
     public static Context getApp() {
         if (sApp == null) {
-            throw new IllegalStateException("must call Utils.setApp()");
+            throw new IllegalStateException("must call UtilSource.setApp()");
         }
         return sApp;
     }

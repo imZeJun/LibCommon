@@ -1,8 +1,10 @@
-package com.lib.common.util;
+package com.lib.common.worker;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.IntDef;
+
+import com.lib.common.source.UtilSource;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -12,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class SPUtils {
+public class SpWorker {
 
     @IntDef({EditorType.INT, EditorType.STRING, EditorType.FLOAT, EditorType.LONG, EditorType.BOOLEAN, EditorType.CLEAR, EditorType.REMOVE})
     @Retention(RetentionPolicy.SOURCE)
@@ -27,19 +29,18 @@ public class SPUtils {
     }
 
     public static class Holder {
-        private static final SPUtils INSTANCE = new SPUtils();
+        private static final SpWorker INSTANCE = new SpWorker();
     }
 
-    public static SPUtils getInstance() {
+    public static SpWorker getInstance() {
         return Holder.INSTANCE;
     }
 
     private static final boolean USE_THREAD_POOL = true;
-    private ConcurrentHashMap<String, SharedPreferences> mSPSources = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, ConcurrentHashMap<String, Object>> mCacheMaps = new ConcurrentHashMap<>();
     private ExecutorService mExecutorService;
 
-    private SPUtils() {
+    private SpWorker() {
         mExecutorService = Executors.newSingleThreadExecutor();
     }
 
@@ -50,7 +51,7 @@ public class SPUtils {
             cacheValue = (Integer) cacheMap.get(key);
         }
         if (cacheValue == null || !useThreadPool()) {
-            SharedPreferences source = getSource(fileName);
+            SharedPreferences source = getSharedPreferences(fileName);
             return source != null ? source.getInt(key, defaultValue) : defaultValue;
         } else {
             return cacheValue;
@@ -64,7 +65,7 @@ public class SPUtils {
             cacheValue = (Boolean) cacheMap.get(key);
         }
         if (cacheValue == null || !useThreadPool()) {
-            SharedPreferences source = getSource(fileName);
+            SharedPreferences source = getSharedPreferences(fileName);
             return source != null ? source.getBoolean(key, defaultValue) : defaultValue;
         } else {
             return cacheValue;
@@ -78,7 +79,7 @@ public class SPUtils {
             cacheValue = (String) cacheMap.get(key);;
         }
         if (cacheValue == null || !useThreadPool()) {
-            SharedPreferences source = getSource(fileName);
+            SharedPreferences source = getSharedPreferences(fileName);
             return source != null ? source.getString(key, defaultValue) : defaultValue;
         } else {
             return cacheValue;
@@ -92,7 +93,7 @@ public class SPUtils {
             cacheValue = (Long) cacheMap.get(key);
         }
         if (cacheValue == null || !useThreadPool()) {
-            SharedPreferences source = getSource(fileName);
+            SharedPreferences source = getSharedPreferences(fileName);
             return source != null ? source.getLong(key, defaultValue) : defaultValue;
         } else {
             return cacheValue;
@@ -106,7 +107,7 @@ public class SPUtils {
             cacheValue = (Float) cacheMap.get(key);
         }
         if (cacheValue == null || !useThreadPool()) {
-            SharedPreferences source = getSource(fileName);
+            SharedPreferences source = getSharedPreferences(fileName);
             return source != null ? source.getFloat(key, defaultValue) : defaultValue;
         } else {
             return cacheValue;
@@ -146,13 +147,17 @@ public class SPUtils {
         if (useThreadPool() && cacheMap != null && cacheMap.get(key) != null) {
             return true;
         } else {
-            SharedPreferences source = getSource(fileName);
+            SharedPreferences source = getSharedPreferences(fileName);
             return source != null && source.contains(key);
         }
     }
 
-    public void doRealWork(String fileName, SpEditor spEditor) {
-        SharedPreferences source = getSource(fileName);
+    public void applyBatch(String fileName, SpEditor spEditor) {
+        doRealWork(fileName, spEditor);
+    }
+
+    private void doRealWork(String fileName, SpEditor spEditor) {
+        SharedPreferences source = getSharedPreferences(fileName);
         SharedPreferences.Editor editor = source.edit();
         ConcurrentHashMap<String, Object> cacheMap = getCache(fileName);
         for (SpEditor.Value value : spEditor.getValues()) {
@@ -205,10 +210,10 @@ public class SPUtils {
                     break;
             }
         }
-        doEditorWork(editor);
+        doRealEditorWork(editor);
     }
 
-    private void doEditorWork(SharedPreferences.Editor editor) {
+    private void doRealEditorWork(SharedPreferences.Editor editor) {
         if (useThreadPool()) {
             mExecutorService.execute(new CommitRunnable(editor));
         } else {
@@ -225,8 +230,8 @@ public class SPUtils {
         return cacheMap;
     }
 
-    private SharedPreferences getSource(String fileName) {
-        return Utils.getApp().getSharedPreferences(fileName, Context.MODE_PRIVATE);
+    private SharedPreferences getSharedPreferences(String fileName) {
+        return UtilSource.getApp().getSharedPreferences(fileName, Context.MODE_PRIVATE);
     }
 
     private boolean useThreadPool() {
@@ -251,7 +256,7 @@ public class SPUtils {
 
     public static class SpEditor {
 
-        private List<Value> values = new ArrayList<>();
+        private List<Value> values = new ArrayList<>(5);
 
         SpEditor(SpEditor.Builder builder) {
             this.values = builder.values;
@@ -263,7 +268,7 @@ public class SPUtils {
 
         public static class Builder {
 
-            private List<Value> values = new ArrayList<>();
+            private List<Value> values = new ArrayList<>(5);
 
             public Builder putInt(String key, int value) {
                 values.add(new Value(EditorType.INT, key, value));

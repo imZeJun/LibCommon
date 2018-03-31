@@ -3,7 +3,8 @@ package com.demo.lizejun.libcommon;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import com.lib.common.util.SPUtils;
+import com.lib.common.worker.SimpleWorker;
+import com.lib.common.worker.SpWorker;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -11,6 +12,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        SPUtils.getInstance().doRealWork("aa", new SPUtils.SpEditor.Builder().clear().build());
+        SpWorker.getInstance().applyBatch("aa",
+                new SpWorker.SpEditor.Builder()
+                        .putBoolean("aaa", false)
+                        .clear().build());
+        SimpleWorker.getInstance().startAsyncWork(new Runnable() {
+
+            @Override
+            public void run() {
+
+            }
+        });
     }
 }
