@@ -71,8 +71,22 @@ public abstract class AsyncWorker<ResultType, CookieType> extends Handler {
         mWorkerThreadHandler.sendMessage(message);
     }
 
+    /**
+     * 在子线程中回调，用于处理耗时的任务，并返回处理的结果。
+     *
+     * @param token 用于标识任务的 ID。
+     * @param cookie 用于传入任务所需的参数。
+     * @return 任务处理的结果。
+     */
     public abstract ResultType onAsyncWorkBegin(int token, CookieType cookie);
 
+    /**
+     * 在主线程中回调，更新 UI。
+     *
+     * @param token 用于标识任务的 ID。
+     * @param cookie 用于传入任务所需的参数。
+     * @param result 任务处理的结果。
+     */
     public abstract void onAsyncWorkFinished(int token, CookieType cookie, ResultType result);
 
 
